@@ -1,21 +1,19 @@
 use super::Injector;
 use crate::{
     container::DependencyContainer,
-    deps_list::{DepsListGet, DepsListRemove, PredicateMatches},
+    deps_list::{DepsListGet, DepsListRemove},
 };
-use std::{convert::Infallible, marker::PhantomData};
+use std::convert::Infallible;
 
 pub struct SingletonStrategy(Infallible);
 
 pub struct SingletonContainer<T>(pub(crate) T);
-pub struct SingletonPredicate<T>(PhantomData<T>, Infallible);
-impl<T> PredicateMatches<SingletonContainer<T>> for SingletonPredicate<T> {}
 
 impl<Parent, Scope, T, Idx>
     Injector<(T, DependencyContainer<Parent, Scope::Remainder>), Idx, SingletonStrategy>
     for DependencyContainer<Parent, Scope>
 where
-    Scope: DepsListRemove<SingletonPredicate<T>, Idx, Removed = SingletonContainer<T>>,
+    Scope: DepsListRemove<SingletonContainer<T>, Idx>,
 {
     fn inject(self) -> (T, DependencyContainer<Parent, Scope::Remainder>) {
         let (injected, new_scope) = self.scope.remove();
@@ -32,7 +30,7 @@ where
 impl<'a, Parent, Scope, T, Idx> Injector<&'a T, Idx, SingletonStrategy>
     for &'a DependencyContainer<Parent, Scope>
 where
-    Scope: DepsListGet<SingletonPredicate<T>, Idx, Value = SingletonContainer<T>>,
+    Scope: DepsListGet<SingletonContainer<T>, Idx>,
 {
     fn inject(self) -> &'a T {
         &self.scope.get().0
@@ -42,7 +40,7 @@ where
 impl<'a, Parent, Scope, T, Idx> Injector<&'a mut T, Idx, SingletonStrategy>
     for &'a mut DependencyContainer<Parent, Scope>
 where
-    Scope: DepsListGet<SingletonPredicate<T>, Idx, Value = SingletonContainer<T>>,
+    Scope: DepsListGet<SingletonContainer<T>, Idx>,
 {
     fn inject(self) -> &'a mut T {
         &mut self.scope.get_mut().0

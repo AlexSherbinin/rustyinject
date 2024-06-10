@@ -1,6 +1,8 @@
+use std::marker::PhantomData;
+
 use crate::{
-    deps_list::DepsList,
-    injector::{FactoryContainer, SingletonContainer},
+    deps_list::{DepsList, DepsListGet},
+    injector::{Factory, FactoryBuild, FactoryContainer, SingletonContainer},
 };
 
 pub struct DependencyContainer<Parent, Scope> {
@@ -34,13 +36,16 @@ where
         }
     }
 
-    pub fn with_factory<F>(
+    pub fn with_factory<F, FactoryResult>(
         self,
         factory: F,
-    ) -> DependencyContainer<Parent, Scope::PrependedWith<FactoryContainer<F>>> {
+    ) -> DependencyContainer<Parent, Scope::PrependedWith<FactoryContainer<F, FactoryResult>>>
+    where
+        F: Factory<Result = FactoryResult>,
+    {
         DependencyContainer {
             parent: self.parent,
-            scope: self.scope.prepend(FactoryContainer(factory)),
+            scope: self.scope.prepend(FactoryContainer(factory, PhantomData)),
         }
     }
 }

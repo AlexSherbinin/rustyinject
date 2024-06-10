@@ -25,72 +25,55 @@ impl<Head, Tail> DepsList for (Head, Tail) {
 pub struct Last(Infallible);
 pub struct Next<Idx>(PhantomData<Idx>, Infallible);
 
-pub trait DepsListGet<Predicate, Idx> {
-    type Value;
-
-    fn get(&self) -> &Self::Value;
-    fn get_mut(&mut self) -> &mut Self::Value;
+pub trait DepsListGet<T, Idx> {
+    fn get(&self) -> &T;
+    fn get_mut(&mut self) -> &mut T;
 }
 
-pub trait PredicateMatches<T> {}
-
-impl<Head, Tail, Predicate> DepsListGet<Predicate, Last> for (Head, Tail)
-where
-    Predicate: PredicateMatches<Head>,
-{
-    type Value = Head;
-
-    fn get(&self) -> &Self::Value {
+impl<Tail, T> DepsListGet<T, Last> for (T, Tail) {
+    fn get(&self) -> &T {
         &self.0
     }
 
-    fn get_mut(&mut self) -> &mut Self::Value {
+    fn get_mut(&mut self) -> &mut T {
         &mut self.0
     }
 }
 
-impl<Head, Tail, Predicate, Idx> DepsListGet<Predicate, Next<Idx>> for (Head, Tail)
+impl<Head, Tail, T, Idx> DepsListGet<T, Next<Idx>> for (Head, Tail)
 where
-    Tail: DepsListGet<Predicate, Idx>,
+    Tail: DepsListGet<T, Idx>,
 {
-    type Value = Tail::Value;
-
-    fn get(&self) -> &Self::Value {
+    fn get(&self) -> &T {
         self.1.get()
     }
 
-    fn get_mut(&mut self) -> &mut Self::Value {
+    fn get_mut(&mut self) -> &mut T {
         self.1.get_mut()
     }
 }
 
-pub trait DepsListRemove<Predicate, Idx> {
-    type Removed;
+pub trait DepsListRemove<T, Idx> {
     type Remainder;
 
-    fn remove(self) -> (Self::Removed, Self::Remainder);
+    fn remove(self) -> (T, Self::Remainder);
 }
 
-impl<Head, Tail, Predicate> DepsListRemove<Predicate, Last> for (Head, Tail)
-where
-    Predicate: PredicateMatches<Head>,
-{
-    type Removed = Head;
+impl<Tail, T> DepsListRemove<T, Last> for (T, Tail) {
     type Remainder = Tail;
 
-    fn remove(self) -> (Self::Removed, Self::Remainder) {
+    fn remove(self) -> (T, Self::Remainder) {
         self
     }
 }
 
-impl<Head, Tail, Predicate, Idx> DepsListRemove<Predicate, Next<Idx>> for (Head, Tail)
+impl<Head, Tail, T, Idx> DepsListRemove<T, Next<Idx>> for (Head, Tail)
 where
-    Tail: DepsListRemove<Predicate, Idx>,
+    Tail: DepsListRemove<T, Idx>,
 {
-    type Removed = Tail::Removed;
     type Remainder = (Head, Tail::Remainder);
 
-    fn remove(self) -> (Self::Removed, Self::Remainder) {
+    fn remove(self) -> (T, Self::Remainder) {
         let (removed, tail_remainder) = self.1.remove();
         (removed, (self.0, tail_remainder))
     }
