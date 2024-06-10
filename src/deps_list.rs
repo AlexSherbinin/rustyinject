@@ -1,4 +1,10 @@
-use std::{convert::Infallible, marker::PhantomData};
+use std::{
+    convert::Infallible,
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+    rc::Rc,
+    sync::Arc,
+};
 
 pub trait DepsList: Sized {
     type PrependedWith<T>;
@@ -25,31 +31,95 @@ impl<Head, Tail> DepsList for (Head, Tail) {
 pub struct Last(Infallible);
 pub struct Next<Idx>(PhantomData<Idx>, Infallible);
 
-pub trait DepsListGet<T, Idx> {
+pub trait DepsListGetRef<T, Idx> {
     fn get(&self) -> &T;
+}
+
+pub trait DepsListGetMut<T, Idx> {
     fn get_mut(&mut self) -> &mut T;
 }
 
-impl<Tail, T> DepsListGet<T, Last> for (T, Tail) {
+impl<Tail, T> DepsListGetRef<T, Last> for (T, Tail) {
     fn get(&self) -> &T {
         &self.0
     }
+}
 
+impl<Head, Tail, T, Idx> DepsListGetRef<T, Next<Idx>> for (Head, Tail)
+where
+    Tail: DepsListGetRef<T, Idx>,
+{
+    fn get(&self) -> &T {
+        self.1.get()
+    }
+}
+
+impl<D, T, Idx> DepsListGetRef<T, Idx> for &D
+where
+    D: DepsListGetRef<T, Idx>,
+{
+    fn get(&self) -> &T {
+        (*self).get()
+    }
+}
+
+impl<D, T, Idx> DepsListGetRef<T, Idx> for Box<D>
+where
+    D: DepsListGetRef<T, Idx>,
+{
+    fn get(&self) -> &T {
+        self.deref().get()
+    }
+}
+
+impl<D, T, Idx> DepsListGetRef<T, Idx> for Rc<D>
+where
+    D: DepsListGetRef<T, Idx>,
+{
+    fn get(&self) -> &T {
+        self.deref().get()
+    }
+}
+
+impl<D, T, Idx> DepsListGetRef<T, Idx> for Arc<D>
+where
+    D: DepsListGetRef<T, Idx>,
+{
+    fn get(&self) -> &T {
+        self.deref().get()
+    }
+}
+
+impl<Tail, T> DepsListGetMut<T, Last> for (T, Tail) {
     fn get_mut(&mut self) -> &mut T {
         &mut self.0
     }
 }
 
-impl<Head, Tail, T, Idx> DepsListGet<T, Next<Idx>> for (Head, Tail)
+impl<Head, Tail, T, Idx> DepsListGetMut<T, Next<Idx>> for (Head, Tail)
 where
-    Tail: DepsListGet<T, Idx>,
+    Tail: DepsListGetMut<T, Idx>,
 {
-    fn get(&self) -> &T {
-        self.1.get()
-    }
-
     fn get_mut(&mut self) -> &mut T {
         self.1.get_mut()
+    }
+}
+
+impl<D, T, Idx> DepsListGetMut<T, Idx> for &mut D
+where
+    D: DepsListGetMut<T, Idx>,
+{
+    fn get_mut(&mut self) -> &mut T {
+        (*self).get_mut()
+    }
+}
+
+impl<D, T, Idx> DepsListGetMut<T, Idx> for Box<D>
+where
+    D: DepsListGetMut<T, Idx>,
+{
+    fn get_mut(&mut self) -> &mut T {
+        self.deref_mut().get_mut()
     }
 }
 

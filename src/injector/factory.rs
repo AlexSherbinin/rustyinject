@@ -1,5 +1,5 @@
 use super::Injector;
-use crate::{container::DependencyContainer, deps_list::DepsListGet};
+use crate::{container::DependencyContainer, deps_list::DepsListGetRef};
 use std::{convert::Infallible, marker::PhantomData};
 
 pub struct FactoryStrategy<F, FactoryData>(PhantomData<(F, FactoryData)>, Infallible);
@@ -14,14 +14,14 @@ pub trait FactoryBuild<DepsContainer, Data>: Factory {
 
 pub struct FactoryContainer<F, FactoryResult>(pub(crate) F, pub(crate) PhantomData<FactoryResult>);
 
-impl<Parent, Scope, F, FactoryData, T, Idx> Injector<T, Idx, FactoryStrategy<F, FactoryData>>
+impl<Parent, Scope, F, FactoryData, T, Infer> Injector<T, (Infer, FactoryStrategy<F, FactoryData>)>
     for &DependencyContainer<Parent, Scope>
 where
-    Scope: DepsListGet<FactoryContainer<F, T>, Idx>,
+    Self: DepsListGetRef<FactoryContainer<F, T>, Infer>,
     F: FactoryBuild<DependencyContainer<Parent, Scope>, FactoryData, Result = T>,
 {
     fn inject(self) -> T {
-        let factory = &self.scope.get().0;
+        let factory = &self.get().0;
         factory.build(self)
     }
 }
@@ -37,6 +37,23 @@ mod tests {
         #[derive(Clone)]
         struct Cache;
 
+        struct AnotherApp(Database);
+
+        struct AnotherAppFactory;
+
+        impl Factory for AnotherAppFactory {
+            type Result = AnotherApp;
+        }
+
+        impl<DepsContainer, DatabaseInfer> FactoryBuild<DepsContainer, DatabaseInfer> for AnotherAppFactory
+        where
+            for<'a> &'a DepsContainer: Injector<&'a Database, DatabaseInfer>,
+        {
+            fn build(&self, container: &DepsContainer) -> Self::Result {
+                AnotherApp(container.inject().clone())
+            }
+        }
+
         struct App {
             db: Database,
             cache: Cache,
@@ -48,12 +65,11 @@ mod tests {
             type Result = App;
         }
 
-        impl<DepsContainer, DatabaseIdx, DatabaseStrategy, CacheIdx, CacheStrategy>
-            FactoryBuild<DepsContainer, (DatabaseIdx, DatabaseStrategy, CacheIdx, CacheStrategy)>
-            for AppFactory
+        impl<DepsContainer, DatabaseInfer, CacheInfer>
+            FactoryBuild<DepsContainer, (DatabaseInfer, CacheInfer)> for AppFactory
         where
-            for<'a> &'a DepsContainer: Injector<&'a Database, DatabaseIdx, DatabaseStrategy>
-                + Injector<&'a Cache, CacheIdx, CacheStrategy>,
+            for<'a> &'a DepsContainer:
+                Injector<&'a Database, DatabaseInfer> + Injector<&'a Cache, CacheInfer>,
         {
             fn build(&self, container: &DepsContainer) -> Self::Result {
                 let db: &Database = container.inject();
@@ -70,7 +86,9 @@ mod tests {
             .with_singleton(Database)
             .with_singleton(Cache)
             .with_factory(AppFactory);
+        let new_container = DependencyContainer::new(container).with_factory(AnotherAppFactory);
 
-        let app: App = (&container).inject();
+        let _app: App = (&new_container).inject();
+        let _another_app: AnotherApp = (&new_container).inject();
     }
 }
