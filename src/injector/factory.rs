@@ -1,6 +1,6 @@
 use super::Injector;
 use crate::{container::DependencyContainer, deps_list::DepsListGetRef};
-use std::{convert::Infallible, marker::PhantomData};
+use core::{convert::Infallible, marker::PhantomData};
 
 /// A trait representing a factory for creating an instance of dependencies.
 pub trait Factory {
@@ -60,6 +60,7 @@ mod tests {
             }
         }
 
+        #[allow(dead_code)]
         struct App {
             db: Database,
             cache: Cache,

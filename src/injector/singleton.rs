@@ -3,7 +3,7 @@ use crate::{
     container::DependencyContainer,
     deps_list::{DepsListGetMut, DepsListGetRef, DepsListRemove},
 };
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 /// A marker struct used to signify the singleton strategy in dependency injection.
 pub struct SingletonStrategy(Infallible);

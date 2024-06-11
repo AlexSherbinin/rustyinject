@@ -1,9 +1,8 @@
-use std::{
+use alloc::{rc::Rc, sync::Arc};
+use core::{
     convert::Infallible,
     marker::PhantomData,
     ops::{Deref, DerefMut},
-    rc::Rc,
-    sync::Arc,
 };
 
 /// Heterogeneously-typed list for storing dependencies.

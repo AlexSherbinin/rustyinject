@@ -1,6 +1,6 @@
 use super::{containers::SingletonContainer, Injector};
 use crate::{container::DependencyContainer, deps_list::DepsListGetRef};
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 /// A marker struct used to signify the singleton cloned strategy in dependency injection.
 pub struct SinglentonClonedStrategy(Infallible);

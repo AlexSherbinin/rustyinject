@@ -5,7 +5,7 @@ use crate::{
         Factory,
     },
 };
-use std::{convert::Infallible, marker::PhantomData};
+use core::{convert::Infallible, marker::PhantomData};
 
 /// Current scope index.
 pub struct CurrentScope(Infallible);
