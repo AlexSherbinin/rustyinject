@@ -6,6 +6,7 @@ use std::{
     sync::Arc,
 };
 
+/// Heterogeneously-typed list for storing dependencies.
 pub trait DepsList: Sized {
     type PrependedWith<T>;
 
@@ -28,15 +29,30 @@ impl<Head, Tail> DepsList for (Head, Tail) {
     }
 }
 
+/// Last index of the list.
 pub struct Last(Infallible);
+/// Next index of the list.
 pub struct Next<Idx>(PhantomData<Idx>, Infallible);
 
+/// Trait for getting immutable references to the dependencies in the heterogeneously-typed list.
 pub trait DepsListGetRef<T, Idx> {
+    /// Get an immutable reference to a dependency.
     fn get(&self) -> &T;
 }
 
+/// Trait for getting mutable references to the dependencies in the heterogeneously-typed list.
 pub trait DepsListGetMut<T, Idx> {
+    /// Get a mutable reference to a dependency.
     fn get_mut(&mut self) -> &mut T;
+}
+
+/// Trait for removing dependencies from the heterogeneously-typed list.
+pub trait DepsListRemove<T, Idx> {
+    /// List without specified dependency.
+    type Remainder;
+
+    /// Remove dependency.
+    fn remove(self) -> (T, Self::Remainder);
 }
 
 impl<Tail, T> DepsListGetRef<T, Last> for (T, Tail) {
@@ -121,12 +137,6 @@ where
     fn get_mut(&mut self) -> &mut T {
         self.deref_mut().get_mut()
     }
-}
-
-pub trait DepsListRemove<T, Idx> {
-    type Remainder;
-
-    fn remove(self) -> (T, Self::Remainder);
 }
 
 impl<Tail, T> DepsListRemove<T, Last> for (T, Tail) {

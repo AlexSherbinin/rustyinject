@@ -1,9 +1,22 @@
 use crate::{
     deps_list::{DepsList, DepsListGetMut, DepsListGetRef, DepsListRemove},
-    injector::{CurrentScope, Factory, FactoryContainer, ParentScope, SingletonContainer},
+    injector::{
+        containers::{FactoryContainer, SingletonContainer},
+        Factory,
+    },
 };
-use std::marker::PhantomData;
+use std::{convert::Infallible, marker::PhantomData};
 
+/// Current scope index.
+pub struct CurrentScope(Infallible);
+/// Parent scope index.
+pub struct ParentScope<Scope>(PhantomData<Scope>, Infallible);
+
+/// An Inversion of Control (IoC) container used for declaring and managing dependencies in a Rust application.
+/// It facilitates the creation, storage, and retrieval of dependencies, supporting both singleton and factory-based dependency injection.
+/// # Generics
+/// - `Parent`: a parent container.
+/// - `Scope`: current scope of the container.
 pub struct DependencyContainer<Parent, Scope> {
     pub(crate) parent: Parent,
     pub(crate) scope: Scope,
@@ -16,6 +29,7 @@ impl Default for DependencyContainer<(), ()> {
 }
 
 impl<Parent> DependencyContainer<Parent, ()> {
+    /// Create a new container with the specified parent.
     pub fn new(parent: Parent) -> Self {
         Self { parent, scope: () }
     }
@@ -25,6 +39,7 @@ impl<Parent, Scope> DependencyContainer<Parent, Scope>
 where
     Scope: DepsList,
 {
+    /// Add a concrete instance of a dependency (singleton) to the container.
     pub fn with_singleton<T>(
         self,
         singleton: T,
@@ -35,6 +50,7 @@ where
         }
     }
 
+    /// Add a factory-based dependency to the container.
     pub fn with_factory<F, FactoryResult>(
         self,
         factory: F,
