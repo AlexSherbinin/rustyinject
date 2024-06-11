@@ -51,12 +51,12 @@ where
     }
 
     /// Add a factory-based dependency to the container.
-    pub fn with_factory<F, FactoryResult>(
+    pub fn with_factory<F>(
         self,
         factory: F,
-    ) -> DependencyContainer<Parent, Scope::PrependedWith<FactoryContainer<F, FactoryResult>>>
+    ) -> DependencyContainer<Parent, Scope::PrependedWith<FactoryContainer<F, F::Result>>>
     where
-        F: Factory<Result = FactoryResult>,
+        F: Factory,
     {
         DependencyContainer {
             parent: self.parent,
