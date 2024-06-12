@@ -1,0 +1,17 @@
+[package]
+name = "rustyinject-axum-example"
+authors.workspace = true
+description.workspace = true
+version.workspace = true
+repository.workspace = true
+readme.workspace = true
+license.workspace = true
+edition.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+axum = "0.7.5"
+rustyinject = { version = "0.1.0", path = "../.." }
+serde = { version = "1.0.203", features = ["derive"] }
+tokio = { version = "1.38.0", features = ["full"] }
