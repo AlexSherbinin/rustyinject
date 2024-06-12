@@ -64,6 +64,7 @@ where
         }
     }
 
+    /// Add a factory-based dependency to the container.
     pub fn with_ref_factory<'a, F>(
         self,
         factory: F,
