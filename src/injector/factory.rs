@@ -7,10 +7,10 @@ pub trait Factory {
     /// A result of the factory [`build`](Factory::build) method.
     type Result;
     /// Dependencies of the factory.
-    type Dependencies;
+    type Dependencies<'a>;
 
     /// Build result from dependencies.
-    fn build(&self, dependencies: Self::Dependencies) -> Self::Result;
+    fn build(&self, dependencies: Self::Dependencies<'_>) -> Self::Result;
 }
 
 /// A marker struct used to signify the factory strategy in dependency injection.
@@ -18,11 +18,12 @@ pub struct FactoryStrategy<F, FactoryInfer>(PhantomData<(F, FactoryInfer)>, Infa
 /// A container for holding a [`Factory`] instance and its result type.
 pub struct FactoryContainer<F, FactoryResult>(pub(crate) F, pub(crate) PhantomData<FactoryResult>);
 
-impl<Parent, Scope, F, FactoryInfer, T, Infer>
-    Injector<T, (Infer, FactoryStrategy<F, FactoryInfer>)> for &DependencyContainer<Parent, Scope>
+impl<'a, Parent, Scope, F, FactoryInfer, T, Infer>
+    Injector<T, (Infer, FactoryStrategy<F, FactoryInfer>)>
+    for &'a DependencyContainer<Parent, Scope>
 where
-    Self:
-        DepsListGetRef<FactoryContainer<F, T>, Infer> + ListInjector<F::Dependencies, FactoryInfer>,
+    Self: DepsListGetRef<FactoryContainer<F, T>, Infer>
+        + ListInjector<F::Dependencies<'a>, FactoryInfer>,
     F: Factory<Result = T>,
 {
     fn inject(self) -> T {
@@ -104,13 +105,16 @@ mod tests {
 
         impl Factory for AppFactory {
             type Result = App;
-            type Dependencies = (Database, (Cache, ()));
+            type Dependencies<'a> = (&'a Database, (Cache, ()));
 
-            fn build(&self, dependencies: Self::Dependencies) -> Self::Result {
-                let (db, dependencies): (Database, (Cache, ())) = dependencies.remove();
+            fn build(&self, dependencies: Self::Dependencies<'_>) -> Self::Result {
+                let (db, dependencies): (&Database, (Cache, ())) = dependencies.remove();
                 let (cache, _dependencies) = dependencies.remove();
 
-                App { db, cache }
+                App {
+                    db: db.clone(),
+                    cache,
+                }
             }
         }
 
