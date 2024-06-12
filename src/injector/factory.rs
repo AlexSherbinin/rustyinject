@@ -2,7 +2,7 @@ use super::{Injector, ListInjector};
 use crate::{container::DependencyContainer, deps_list::DepsListGetRef};
 use core::{convert::Infallible, marker::PhantomData};
 
-/// A trait representing a factory for creating an instance of dependencies.
+/// A trait representing a factory for creating an instance from dependencies.
 pub trait Factory {
     /// A result of the factory [`build`](Factory::build) method.
     type Result;
@@ -15,7 +15,7 @@ pub trait Factory {
 
 /// A marker struct used to signify the factory strategy in dependency injection.
 pub struct FactoryStrategy<F, FactoryInfer>(PhantomData<(F, FactoryInfer)>, Infallible);
-/// A container for holding a factory instance and its result type.
+/// A container for holding a [`Factory`] instance and its result type.
 pub struct FactoryContainer<F, FactoryResult>(pub(crate) F, pub(crate) PhantomData<FactoryResult>);
 
 impl<Parent, Scope, F, FactoryInfer, T, Infer>
@@ -31,15 +31,23 @@ where
     }
 }
 
+/// A trait representing a factory for creating an instance from dependecies but instead of
+/// [`Factory`] it consumes references that passed.
 pub trait RefFactory {
+    /// A result of the factory [`build`](RefFactory::build) method.
     type Result<'a>;
+    /// Dependencies of the factory
     type Dependencies<'a>;
 
+    /// Build result from dependencies.
     fn build<'a>(&self, dependencies: Self::Dependencies<'a>) -> Self::Result<'a>;
 }
 
+/// A marker struct used to signify the factory strategy with consuming references of dependencies
+/// in dependency injection.
 pub struct RefFactoryStrategy<F, FactoryInfer>(PhantomData<(F, FactoryInfer)>, Infallible);
 
+/// A container for holding a [`RefFactory`] instance and its result type.
 pub struct RefFactoryContainer<F, FactoryResult>(
     pub(crate) F,
     pub(crate) PhantomData<FactoryResult>,
