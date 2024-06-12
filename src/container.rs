@@ -1,8 +1,11 @@
 use crate::{
     deps_list::{DepsList, DepsListGetMut, DepsListGetRef, DepsListRemove},
     injector::{
-        containers::{FactoryContainer, RefFactoryContainer, SingletonContainer},
-        Factory, RefFactory,
+        containers::{
+            ConstructorFactoryContainer, FactoryContainer, RefConstructorFactoryContainer,
+            RefFactoryContainer, SingletonContainer,
+        },
+        factories::{ConstructorFactory, Factory, RefFactory},
     },
 };
 use core::{convert::Infallible, marker::PhantomData};
@@ -77,6 +80,29 @@ where
             scope: self
                 .scope
                 .prepend(RefFactoryContainer(factory, PhantomData)),
+        }
+    }
+
+    pub fn with_constructor_factory<T>(
+        self,
+    ) -> DependencyContainer<Parent, Scope::PrependedWith<ConstructorFactoryContainer<T>>>
+    where
+        T: ConstructorFactory,
+    {
+        DependencyContainer {
+            parent: self.parent,
+            scope: self.scope.prepend(ConstructorFactoryContainer(PhantomData)),
+        }
+    }
+
+    pub fn with_ref_constructor_factory<T>(
+        self,
+    ) -> DependencyContainer<Parent, Scope::PrependedWith<RefConstructorFactoryContainer<T>>> {
+        DependencyContainer {
+            parent: self.parent,
+            scope: self
+                .scope
+                .prepend(RefConstructorFactoryContainer(PhantomData)),
         }
     }
 }

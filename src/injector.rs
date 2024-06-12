@@ -1,23 +1,32 @@
 //! Injector trait, containers and strategies needed for dependency injection.
 
+mod constructor_factory;
 mod factory;
 mod singleton;
 mod singleton_cloned;
 
-/// Strategies of dependency injection.
 pub mod strategies {
+    //! Strategies of dependency injection.
+    pub use super::constructor_factory::{ConstructorFactory, RefConstructorFactoryStrategy};
     pub use super::factory::{FactoryStrategy, RefFactoryStrategy};
     pub use super::singleton::SingletonStrategy;
     pub use super::singleton_cloned::SinglentonClonedStrategy;
 }
 
-/// Containers for storing dependencies.
 pub mod containers {
+    //! Containers for storing dependencies.
+    pub use super::constructor_factory::{
+        ConstructorFactoryContainer, RefConstructorFactoryContainer,
+    };
     pub use super::factory::{FactoryContainer, RefFactoryContainer};
     pub use super::singleton::SingletonContainer;
 }
 
-pub use factory::{Factory, RefFactory};
+pub mod factories {
+    //! Factories used for creation instances of structs that depend on others.
+    pub use super::constructor_factory::{ConstructorFactory, RefConstructorFactory};
+    pub use super::factory::{Factory, RefFactory};
+}
 
 /// A trait for performing dependency injection.
 /// It serves as a generic interface for implementing dependency injection logic.
