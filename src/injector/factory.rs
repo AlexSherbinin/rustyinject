@@ -31,6 +31,34 @@ where
     }
 }
 
+pub trait RefFactory {
+    type Result<'a>;
+    type Dependencies<'a>;
+
+    fn build<'a>(&self, dependencies: Self::Dependencies<'a>) -> Self::Result<'a>;
+}
+
+pub struct RefFactoryStrategy<F, FactoryInfer>(PhantomData<(F, FactoryInfer)>, Infallible);
+
+pub struct RefFactoryContainer<F, FactoryResult>(
+    pub(crate) F,
+    pub(crate) PhantomData<FactoryResult>,
+);
+
+impl<'a, Parent, Scope, F, FactoryInfer, T, Infer>
+    Injector<T, (Infer, RefFactoryStrategy<F, FactoryInfer>)>
+    for &'a DependencyContainer<Parent, Scope>
+where
+    Self: DepsListGetRef<RefFactoryContainer<F, T>, Infer>
+        + ListInjector<F::Dependencies<'a>, FactoryInfer>,
+    F: RefFactory<Result<'a> = T>,
+{
+    fn inject(self) -> T {
+        let factory = &self.get().0;
+        factory.build(self.inject_list())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::DepsListRemove;
@@ -44,15 +72,16 @@ mod tests {
         #[derive(Clone)]
         struct Cache;
 
-        struct AnotherApp(Database);
+        #[allow(dead_code)]
+        struct AnotherApp<'a>(&'a Database);
 
         struct AnotherAppFactory;
 
-        impl Factory for AnotherAppFactory {
-            type Result = AnotherApp;
-            type Dependencies = (Database, ());
+        impl RefFactory for AnotherAppFactory {
+            type Result<'a> = AnotherApp<'a>;
+            type Dependencies<'a> = (&'a Database, ());
 
-            fn build(&self, dependencies: Self::Dependencies) -> Self::Result {
+            fn build<'a>(&self, dependencies: Self::Dependencies<'a>) -> Self::Result<'a> {
                 AnotherApp(dependencies.0)
             }
         }
@@ -81,7 +110,7 @@ mod tests {
             .with_singleton(Database)
             .with_singleton(Cache)
             .with_factory(AppFactory);
-        let new_container = DependencyContainer::new(container).with_factory(AnotherAppFactory);
+        let new_container = DependencyContainer::new(container).with_ref_factory(AnotherAppFactory);
 
         let _app: App = (&new_container).inject();
         let _another_app: AnotherApp = (&new_container).inject();

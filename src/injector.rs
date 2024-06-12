@@ -6,18 +6,18 @@ mod singleton_cloned;
 
 /// Strategies of dependency injection.
 pub mod strategies {
-    pub use super::factory::FactoryStrategy;
+    pub use super::factory::{FactoryStrategy, RefFactoryStrategy};
     pub use super::singleton::SingletonStrategy;
     pub use super::singleton_cloned::SinglentonClonedStrategy;
 }
 
 /// Containers for storing dependencies.
 pub mod containers {
-    pub use super::factory::FactoryContainer;
+    pub use super::factory::{FactoryContainer, RefFactoryContainer};
     pub use super::singleton::SingletonContainer;
 }
 
-pub use factory::Factory;
+pub use factory::{Factory, RefFactory};
 
 /// A trait for performing dependency injection.
 /// It serves as a generic interface for implementing dependency injection logic.
