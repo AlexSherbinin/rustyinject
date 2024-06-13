@@ -7,8 +7,10 @@ use core::{
 
 /// Heterogeneously-typed list for storing dependencies.
 pub trait DepsList: Sized {
+    /// New list with specific element prepended.
     type PrependedWith<T>;
 
+    /// Prepend element to a list.
     fn prepend<T>(self, value: T) -> Self::PrependedWith<T>;
 }
 

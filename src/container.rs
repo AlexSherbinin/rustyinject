@@ -83,6 +83,7 @@ where
         }
     }
 
+    /// Add a struct that builds from a constructor(like a `new` method).
     pub fn with_constructor_factory<T>(
         self,
     ) -> DependencyContainer<Parent, Scope::PrependedWith<ConstructorFactoryContainer<T>>>
@@ -95,6 +96,8 @@ where
         }
     }
 
+    /// Add a struct that builds from a constructor(like a `new` method) and consumes all
+    /// references that passed
     pub fn with_ref_constructor_factory<T>(
         self,
     ) -> DependencyContainer<Parent, Scope::PrependedWith<RefConstructorFactoryContainer<T>>> {
