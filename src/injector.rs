@@ -7,7 +7,9 @@ mod singleton_cloned;
 
 pub mod strategies {
     //! Strategies of dependency injection.
-    pub use super::constructor_factory::{ConstructorFactory, RefConstructorFactoryStrategy};
+    pub use super::constructor_factory::{
+        ConstructorFactoryStrategy, RefConstructorFactoryStrategy,
+    };
     pub use super::factory::{FactoryStrategy, RefFactoryStrategy};
     pub use super::singleton::SingletonStrategy;
     pub use super::singleton_cloned::SinglentonClonedStrategy;

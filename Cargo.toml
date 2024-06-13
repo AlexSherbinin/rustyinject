@@ -5,7 +5,7 @@ members = [".", "examples/axum"]
 [workspace.package]
 authors = ["AlexSherbinin <alex.sherbinin.andr@gmail.com>"]
 description = "Zero-cost, compile-time DI framework for Rust"
-version = "0.1.0"
+version = "0.1.1"
 repository = "https://github.com/AlexSherbinin/rustyinject"
 readme = "README.md"
 license = "MIT"
